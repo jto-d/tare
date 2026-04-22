@@ -1,4 +1,6 @@
 import 'dotenv/config';
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
 import express from 'express';
 import cors from 'cors';
 import session from 'express-session';
@@ -9,6 +11,8 @@ import { configurePassport } from './auth.js';
 import { authRouter } from './routes/auth.js';
 import { meRouter } from './routes/me.js';
 import { weightsRouter } from './routes/weights.js';
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 const PgStore = connectPgSimple(session);
 const app = express();
@@ -49,6 +53,15 @@ app.get('/health', (_req, res) => res.json({ ok: true }));
 app.use('/auth', authRouter);
 app.use('/api/me', meRouter);
 app.use('/api/weights', weightsRouter);
+
+if (isProd) {
+  const clientDist = path.resolve(__dirname, '../../client/dist');
+  app.use(express.static(clientDist));
+  app.get('*', (req, res, next) => {
+    if (req.path.startsWith('/api/') || req.path.startsWith('/auth/')) return next();
+    res.sendFile(path.join(clientDist, 'index.html'));
+  });
+}
 
 const port = Number(process.env.PORT ?? 3001);
 app.listen(port, () => {

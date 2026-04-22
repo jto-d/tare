@@ -115,10 +115,42 @@ All `/api/*` routes require a valid session cookie.
 | GET    | `/api/weights?days=60` | Recent entries in the user's unit                 |
 | POST   | `/api/weights`         | Upsert today's (or `date`) weight                 |
 
-## Deployment notes
+## Deploying
 
-For production:
+The recommended shape is a single Node host (Render / Railway / Fly / Heroku) that runs the Express server — in production the server also serves the built client from `client/dist` and handles SPA fallback, so everything lives on one origin.
 
-- Set `NODE_ENV=production` on the server so cookies are flagged `secure`.
-- Host the client build (`npm run build` in `client/`) on the same origin as the server, or update `CLIENT_URL` and the Google OAuth redirect URI.
-- Rotate `SESSION_SECRET`.
+**Host build & start commands** (root `package.json` wires these up):
+
+```
+Build:  npm run build      # installs server + client, builds the client
+Start:  npm start          # runs the server via tsx
+```
+
+**Google Cloud Console**
+
+- Add a new authorized redirect URI for your production origin: `https://<your-domain>/auth/google/callback` (keep the localhost one for local dev).
+- Move the OAuth consent screen from **Testing** to **In Production**, otherwise only explicitly-added test users can sign in. `profile email` scopes are non-sensitive so no verification is required.
+
+**Production env vars** (set in the host dashboard):
+
+| Var                     | Value                                                     |
+| ----------------------- | --------------------------------------------------------- |
+| `NODE_ENV`              | `production` (flips the session cookie to `secure`)       |
+| `DATABASE_URL`          | Neon pooler string (same one, or a separate Neon branch)  |
+| `SESSION_SECRET`        | Fresh 32-byte hex — `openssl rand -hex 32`                |
+| `GOOGLE_CLIENT_ID`      | Your prod OAuth client ID                                 |
+| `GOOGLE_CLIENT_SECRET`  | Your prod OAuth client secret                             |
+| `CLIENT_URL`            | `https://<your-domain>` (post-login redirect + CORS)      |
+| `PORT`                  | Usually auto-set by the host                              |
+
+**Neon**
+
+Already production-ready. If you want dev/prod data separation, create a Neon branch (`main` for prod, e.g. `dev` for local) and point each environment's `DATABASE_URL` at the right one.
+
+**Split-host alternative**
+
+If you'd rather host the client separately (Vercel/Netlify) and the server on its own domain, you'll additionally need:
+
+- `sameSite: 'none'` and `secure: true` on the session cookie (`server/src/index.ts`).
+- CORS `credentials: true` with the exact client origin (already wired via `CLIENT_URL`).
+- `VITE_API_URL` or similar in the client, plus absolute URLs in `client/src/api.ts` instead of the current relative paths.

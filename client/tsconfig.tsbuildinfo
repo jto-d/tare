@@ -1,0 +1,1 @@
+{"root":["./src/app.tsx","./src/api.ts","./src/main.tsx","./src/components/areagraph.tsx","./src/components/navbar.tsx","./src/screens/graphscreen.tsx","./src/screens/homescreen.tsx","./src/screens/onboardingscreen.tsx","./src/screens/settingsscreen.tsx","./src/screens/signinscreen.tsx"],"version":"5.9.3"}
