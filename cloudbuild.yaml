@@ -3,10 +3,11 @@ steps:
     args:
       [
         'build',
-        '-f', 'server/Dockerfile',
-        '-t', 'us-central1-docker.pkg.dev/$PROJECT_ID/tare/tare-server:$COMMIT_SHA',
-        './server'
+        '-t', 'us-central1-docker.pkg.dev/$PROJECT_ID/tare/tare:$COMMIT_SHA',
+        '-t', 'us-central1-docker.pkg.dev/$PROJECT_ID/tare/tare:latest',
+        '.'
       ]
 
 images:
-  - 'us-central1-docker.pkg.dev/$PROJECT_ID/tare/tare-server:$COMMIT_SHA'
+  - 'us-central1-docker.pkg.dev/$PROJECT_ID/tare/tare:$COMMIT_SHA'
+  - 'us-central1-docker.pkg.dev/$PROJECT_ID/tare/tare:latest'
