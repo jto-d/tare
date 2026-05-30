@@ -41,14 +41,12 @@ export function AreaGraph({ data }: Props) {
 
   const pts = data.map((d, i) => [x(i), y(d.value)] as [number, number]);
   const lineD = pts
-    .map((p, i) => {
-      if (i === 0) return `M${p[0]},${p[1]}`;
-      const prev = pts[i - 1];
-      const mx = (prev[0] + p[0]) / 2;
-      return `C${mx},${prev[1]} ${mx},${p[1]} ${p[0]},${p[1]}`;
-    })
+    .map((p, i) => `${i === 0 ? 'M' : 'L'}${p[0]},${p[1]}`)
     .join(' ');
   const areaD = `${lineD} L${pts[pts.length - 1][0]},${PT + ch} L${pts[0][0]},${PT + ch} Z`;
+
+  // Shrink the dots as the series gets denser so they stay distinct, not crowded.
+  const dotR = data.length > 40 ? 1.8 : data.length > 20 ? 2.4 : 3;
 
   const tickIdx = [0, Math.floor((data.length - 1) / 2), data.length - 1];
 
@@ -81,7 +79,17 @@ export function AreaGraph({ data }: Props) {
         strokeLinecap="round"
         strokeLinejoin="round"
       />
-      <circle cx={pts[pts.length - 1][0]} cy={pts[pts.length - 1][1]} r="4" fill="var(--accent)" />
+      {pts.map((p, i) => (
+        <circle
+          key={i}
+          cx={p[0]}
+          cy={p[1]}
+          r={i === pts.length - 1 ? dotR + 1.5 : dotR}
+          fill="var(--accent)"
+          stroke="var(--card)"
+          strokeWidth="1.5"
+        />
+      ))}
       {tickIdx.map((i) => (
         <text
           key={i}
